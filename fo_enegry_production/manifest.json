@@ -1,0 +1,12 @@
+{
+    "domain": "fo_energy_production",
+    "name": "Faroese energy production",
+    "documentation": "https://github.com/wentzlau/ha-faroese-energy-production",
+    "issues": "https://github.com/wentzlau/ha-faroese-energy-production/issues",
+    "dependencies": [],
+    "codeowners": ["@wentzlau"],
+    "requirements": [],
+    "iot_class": "local_polling",
+    "version": "0.1.0"
+    
+  }
