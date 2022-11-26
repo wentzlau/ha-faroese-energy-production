@@ -86,6 +86,7 @@ class EnergySensorConfig:
         self.icon = icon
         self.device_state_attributes = device_state_attributes or {}
         self.device_class = device_class
+        
 
 
 class EnergyCurrentConditionsSensorConfig(EnergySensorConfig):
@@ -121,86 +122,110 @@ class EnergyCurrentConditionsSensorConfig(EnergySensorConfig):
 SENSOR_TYPES = {
     # current
     'oil_p': {
-        'name': 'Energy production by Oil (percentage)',
+        'name': 'energy production by Oil (percentage)',
         'unit_of_measurement': '%',
-        'icon': "mdi:OilBarrel",
-        'device_class': ""  
+        'icon': "mdi:barrel",
+        'device_class': "power_factor",
+        'state_class': "measurement"
     },
     'wind_p': {
-        'name': 'Energy production by wind (percentage)',
+        'name': 'energy production by wind (percentage)',
         'unit_of_measurement': '%',
-        'icon':"mdi:WindPower",
-        'device_class': ""
+        'icon':"mdi:wind-turbine",
+        'device_class': "power_factor",
+        'state_class': "measurement"
     },
     'hydro_p': {
-        'name': 'Energy production from hydro (percentage)',
+        'name': 'energy production from hydro (percentage)',
         'unit_of_measurement': '%',
         'icon': "mdi:water",
-        'device_class': ""
+        'device_class': "power_factor",
+        'state_class': "measurement"
     },
     'solar_p': {
-        'name': 'Energy production from solar (percentage)',
-        'icon': 'mdi:SolarPower',
+        'name': 'energy production from solar (percentage)',
+        'icon': 'mdi:solar-power',
         'unit_of_measurement': '%',
-        'device_class': ""
+        'device_class': "power_factor",
+        'state_class': "measurement"
     },
     'tidal_p': {
-        'name': 'Energy production from tidal (percentage)',
+        'name': 'energy production from tidal (percentage)',
         'icon': "mdi:gauge",
         'unit_of_measurement': "%",
-        'device_class': ""
+        'device_class': "power_factor",
+        'state_class': "measurement"
     },
     'biogas_p':{
-        'name': 'Energy production from biogas (percentage)', 
-        'icon': "mdi:Propane",
+        'name': 'energy production from biogas (percentage)', 
+        'icon': "mdi:gauge",
         'unit_of_measurement': "%",
-        'device_class': ""
+        'device_class': "power_factor",
+        'state_class': "measurement"
+    },
+    'fossilFree_p':{
+        'name': 'energy production from fossil free sources (percentage)', 
+        'icon': "mdi:leaf-circle",
+        'unit_of_measurement': "%",
+        'device_class': "power_factor",
+        'state_class': "measurement"
     },
     'oil_e': {
-        'name': 'Energy production by Oil',
+        'name': 'energy production by Oil',
         'unit_of_measurement': 'MW',
-        'icon': "mdi:OilBarrel",
-        'device_class': ""  
+        'icon': "mdi:barrel",
+        'device_class': "power",
+        'state_class': "measurement"
     },
     'wind_e': {
-        'name': 'Energy production by wind',
+        'name': 'energy production by wind',
         'unit_of_measurement': 'MW',
-        'icon':"mdi:WindPower",
-        'device_class': ""
+        'icon':"mdi:wind-turbine",
+        'device_class': "power",
+        'state_class': "measurement"
     },
     'hydro_e': {
-        'name': 'Energy production from hydro',
+        'name': 'energy production from hydro',
         'unit_of_measurement': 'MW',
         'icon': "mdi:water",
-        'device_class': ""
+        'device_class': "power",
+        'state_class': "measurement"
     },
     'solar_e': {
-        'name': 'Energy production from solar',
-        'icon': 'mdi:SolarPower',
+        'name': 'energy production from solar',
+        'icon': 'mdi:solar-power',
         'unit_of_measurement': 'MW',
-        'device_class': ""
+        'device_class': "power",
+        'state_class': "measurement"
     },
     'tidal_e': {
-        'name': 'Energy production from tidal',
+        'name': 'energy production from tidal',
         'icon': "mdi:gauge",
         'unit_of_measurement': "MW",
-        'device_class': ""
+        'device_class': "power",
+        'state_class': "measurement"
     },
     'biogas_e':{
-        'name': 'Energy production from biogas', 
-        'icon': "mdi:Propane",
+        'name': 'energy production from biogas', 
+        'icon': "mdi:gauge",
         'unit_of_measurement': "MW",
-        'device_class': ""
+        'device_class': "power",
+        'state_class': "measurement"
+    },
+    'fossilFree_e':{
+        'name': 'energy production from fossil free sources', 
+        'icon': "mdi:leaf-circle",
+        'unit_of_measurement': "MW",
+        'device_class': "power",
+        'state_class': "measurement"
     }
-    
-    
 }
 
 
 
 AREAS = {
-    'suduroy': { 'name': 'Production Suðuroy', 'source': 'sev', 'station_id': 'suduroy' },
-    'main': { 'name': 'Production main area', 'source': 'sev', 'station_id': 'main' },
+    'suduroy': { 'name': 'Suðuroy', 'source': 'sev', 'station_id': 'suduroy' },
+    'main': { 'name': 'Main area', 'source': 'sev', 'station_id': 'main' },
     'total': { 'name': 'All production ', 'source': 'sev', 'station_id': 'total' },
 }
 
@@ -247,12 +272,15 @@ async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
         sensors.append(EnergySensor(hass, rest, 'tidal_e', area_id, area['name'], 'tidal', 'e'))
         sensors.append(EnergySensor(hass, rest, 'tidal_p', area_id, area['name'], 'tidal', 'p'))
 
+        sensors.append(EnergySensor(hass, rest, 'fossilFree_e', area_id, area['name'], 'fossilFree', 'e'))
+        sensors.append(EnergySensor(hass, rest, 'fossilFree_p', area_id, area['name'], 'fossilFree', 'p'))
+
     async_add_entities(sensors, True)
 
 
 
-class EnergySensor(Entity):
-    """Implementing the WUnderground sensor."""
+class EnergySensor(SensorEntity):
+    """Implementing the sev sensor."""
 
     def __init__(self, hass: HomeAssistantType, rest, sensor_type, area_id, area_name, data_field, data_type):
         """Initialize the sensor."""
@@ -262,7 +290,7 @@ class EnergySensor(Entity):
         self.area_name = area_name
         self.rest = rest
         self._sensor_type = sensor_type
-        self._state = None
+        self._state_class = "measurement"
         self._attributes = {
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
         }
@@ -271,7 +299,7 @@ class EnergySensor(Entity):
         self._unit_of_measurement = self._cfg_expand("unit_of_measurement")
         # This is only the suggested entity id, it might get changed by
         # the entity registry later.
-        unique_id = 'y_fo_energy_production_' + area_id + '_' + data_type + '_' + sensor_type
+        unique_id = 'c_fo_energy_production_' + area_id + '_' + data_type + '_' + sensor_type
         self.entity_id = sensor.ENTITY_ID_FORMAT.format('fo_energy_production_' + area_id + '_' + data_type)
         self._unique_id = unique_id
         self._device_class = self._cfg_expand("device_class")
@@ -280,7 +308,7 @@ class EnergySensor(Entity):
         """Parse and return sensor data."""
         sensor_info = SENSOR_TYPES[self._sensor_type]
         cfg = EnergyCurrentConditionsSensorConfig(
-            sensor_info['name'] + " (" + self.area_name + ")",
+            self.area_name + ", " + sensor_info['name'],
             area_id = self.area_id,
             field= self.data_field,
             field_type= self.data_type,
@@ -352,6 +380,10 @@ class EnergySensor(Entity):
         """Return the units of measurement."""
         return self._device_class
 
+    @property
+    def state_class(self):
+        return self._state_class
+    
     async def async_update(self):
         """Update current conditions."""
         await self.rest.async_update()
@@ -374,7 +406,7 @@ class EnergySensor(Entity):
         return self._unique_id
 
 class SEVData:
-    """Get data from lv.fo"""
+    """Get data from sev.fo"""
     def __init__(self, hass):
         """Initialize the data object."""
         self._hass = hass
@@ -390,9 +422,9 @@ class SEVData:
     
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
-        """Get the latest data from WUnderground."""
         headers = {'Accept-Encoding': 'gzip'}
         current_date = datetime.today()
+        sev_data = None
         try:
             with async_timeout.timeout(10):
                 sev_data = await self._session.get(SEV_URL)
@@ -401,47 +433,49 @@ class SEVData:
                                    
                 
         except ValueError as err:
-            _LOGGER.error("Check weather API %s", err.args)
+            _LOGGER.error("Check sev energy API %s", err.args)
         except (asyncio.TimeoutError, aiohttp.ClientError) as err:
-            _LOGGER.error("Error fetching weather data: %s", repr(err))
-        byte_data = bytearray()
-        while not sev_data.content.at_eof():
-            chunk = await sev_data.content.read(1024)
-            byte_data += chunk   
+            _LOGGER.error("Error fetching energy data: %s", repr(err))
         
-        json_str =byte_data.decode('utf8')
-        sev_data = json.loads(json_str)
-        data = {
-            "time": sev_data["tiden"],
-            "areas": { 
-                "suduroy": {
-                    "wind": { "p": self.tofloat(sev_data["VindS_P"]), "e": self.tofloat(sev_data["VindS_E"])},
-                    "oil": { "p": self.tofloat(sev_data["OlieS_P"]), "e": self.tofloat(sev_data["OlieS_E"])},
-                    "hydro": { "p": self.tofloat(sev_data["VandS_P"]), "e": self.tofloat(sev_data["VandS_E"])},
-                    "solar": { "p": self.tofloat(sev_data["SolS_P"]), "e": self.tofloat(sev_data["SolS_E"])},
-                    "biogas": { "p": 0, "e": 0},
-                    "tidal": { "p": 0, "e": 0}
-                },
-                "main": {
-                    "wind": { "p": self.tofloat(sev_data["VindH_P"]), "e": self.tofloat(sev_data["VindH_E"])},
-                    "oil": { "p": self.tofloat(sev_data["OlieH_P"]), "e": self.tofloat(sev_data["OlieH_E"])},
-                    "hydro": { "p": self.tofloat(sev_data["VandH_P"]), "e": self.tofloat(sev_data["VandH_E"])},
-                    "solar": { "p": 0, "e": 0},
-                    "biogas": { "p": self.tofloat(sev_data["BiogasH_P"]), "e": self.tofloat(sev_data["BiogasH_E"])},
-                    "tidal": { "p": self.tofloat(sev_data["TidalH_P"]), "e": self.tofloat(sev_data["TidalH_E"])}
-                },
-                "total": {
-                    "wind": { "p": self.tofloat(sev_data["VindSev_P"]), "e": self.tofloat(sev_data["VindSev_E"])},
-                    "oil": { "p": self.tofloat(sev_data["OlieSev_P"]), "e": self.tofloat(sev_data["OlieSev_E"])},
-                    "hydro": { "p": self.tofloat(sev_data["VandSev_P"]), "e": self.tofloat(sev_data["VandSev_E"])},
-                    "solar": { "p": self.tofloat(sev_data["SolSev_P"]), "e": self.tofloat(sev_data["SolSev_E"])},
-                    "biogas": { "p": self.tofloat(sev_data["BiogasSev_P"]), "e": self.tofloat(sev_data["BiogasSev_E"])},
-                    "tidal": { "p": self.tofloat(sev_data["TidalSev_P"]), "e": self.tofloat(sev_data["TidalSev_E"])}
+        if sev_data:       
+            byte_data = bytearray()
+            while not sev_data.content.at_eof():
+                chunk = await sev_data.content.read(1024)
+                byte_data += chunk   
+            
+            json_str =byte_data.decode('utf8')
+            sev_data = json.loads(json_str)
+            data = {
+                "time": sev_data["tiden"],
+                "areas": { 
+                    "suduroy": {
+                        "wind": { "p": self.tofloat(sev_data["VindS_P"]), "e": self.tofloat(sev_data["VindS_E"])},
+                        "oil": { "p": self.tofloat(sev_data["OlieS_P"]), "e": self.tofloat(sev_data["OlieS_E"])},
+                        "hydro": { "p": self.tofloat(sev_data["VandS_P"]), "e": self.tofloat(sev_data["VandS_E"])},
+                        "solar": { "p": self.tofloat(sev_data["SolS_P"]), "e": self.tofloat(sev_data["SolS_E"])},
+                        "biogas": { "p": 0, "e": 0},
+                        "tidal": { "p": 0, "e": 0},
+                        "fossilFree": { "p": self.tofloat(sev_data["VindS_P"]) + self.tofloat(sev_data["VandS_P"]) + self.tofloat(sev_data["SolS_P"]), "e": self.tofloat(sev_data["VindS_E"]) + self.tofloat(sev_data["VandS_E"]) + self.tofloat(sev_data["SolS_E"])}
+                    },
+                    "main": {
+                        "wind": { "p": self.tofloat(sev_data["VindH_P"]), "e": self.tofloat(sev_data["VindH_E"])},
+                        "oil": { "p": self.tofloat(sev_data["OlieH_P"]), "e": self.tofloat(sev_data["OlieH_E"])},
+                        "hydro": { "p": self.tofloat(sev_data["VandH_P"]), "e": self.tofloat(sev_data["VandH_E"])},
+                        "solar": { "p": 0, "e": 0},
+                        "biogas": { "p": self.tofloat(sev_data["BiogasH_P"]), "e": self.tofloat(sev_data["BiogasH_E"])},
+                        "tidal": { "p": self.tofloat(sev_data["TidalH_P"]), "e": self.tofloat(sev_data["TidalH_E"])},
+                        "fossilFree": { "p": self.tofloat(sev_data["TidalH_P"]) + self.tofloat(sev_data["BiogasH_P"]) + self.tofloat(sev_data["VindH_P"]) + self.tofloat(sev_data["VandH_P"]) , "e": self.tofloat(sev_data["TidalH_E"]) + self.tofloat(sev_data["BiogasH_E"]) +  self.tofloat(sev_data["VindH_E"]) + self.tofloat(sev_data["VandH_E"]) }
+                    },
+                    "total": {
+                        "wind": { "p": self.tofloat(sev_data["VindSev_P"]), "e": self.tofloat(sev_data["VindSev_E"])},
+                        "oil": { "p": self.tofloat(sev_data["OlieSev_P"]), "e": self.tofloat(sev_data["OlieSev_E"])},
+                        "hydro": { "p": self.tofloat(sev_data["VandSev_P"]), "e": self.tofloat(sev_data["VandSev_E"])},
+                        "solar": { "p": self.tofloat(sev_data["SolSev_P"]), "e": self.tofloat(sev_data["SolSev_E"])},
+                        "biogas": { "p": self.tofloat(sev_data["BiogasSev_P"]), "e": self.tofloat(sev_data["BiogasSev_E"])},
+                        "tidal": { "p": self.tofloat(sev_data["TidalSev_P"]), "e": self.tofloat(sev_data["TidalSev_E"])},
+                        "fossilFree": { "p": self.tofloat(sev_data["TidalSev_P"]) + self.tofloat(sev_data["BiogasSev_P"]) + self.tofloat(sev_data["VindSev_P"]) + self.tofloat(sev_data["VandSev_P"]) + self.tofloat(sev_data["SolSev_P"]), "e": self.tofloat(sev_data["TidalSev_E"]) + self.tofloat(sev_data["BiogasSev_E"]) +  self.tofloat(sev_data["VindSev_E"]) + self.tofloat(sev_data["VandSev_E"]) + self.tofloat(sev_data["SolSev_E"])}
+                    }
                 }
             }
-        }
-
-
-        
-        self.data = data
+            self.data = data
         
