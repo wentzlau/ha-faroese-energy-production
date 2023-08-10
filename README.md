@@ -12,7 +12,7 @@ A set of sensors are created for each area.
     ```
     sensor:    
       - platform: fo_energy_production    
-        area:    
+        areas:    
           - suduroy    
           - main
           - total
