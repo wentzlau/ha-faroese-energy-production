@@ -10,29 +10,18 @@ import aiohttp
 import async_timeout
 
 from homeassistant.components.sensor import (
-    SensorDeviceClass,
     SensorEntity,
-    SensorStateClass,
-)
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+) 
 
-from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 from homeassistant.components import sensor
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS, CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE,
-    TEMP_FAHRENHEIT, TEMP_CELSIUS, LENGTH_INCHES,
-    LENGTH_FEET, LENGTH_MILLIMETERS, LENGTH_METERS, SPEED_MILES_PER_HOUR, SPEED_KILOMETERS_PER_HOUR,
-    PERCENTAGE, PRESSURE_INHG, PRESSURE_MBAR, PRECIPITATION_INCHES_PER_HOUR, PRECIPITATION_MILLIMETERS_PER_HOUR,
+    
     ATTR_ATTRIBUTION)
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.unit_system import METRIC_SYSTEM
+#from homeassistant.util.unit_system import METRIC_SYSTEM
 
 import voluptuous as vol
 import json
@@ -57,7 +46,7 @@ class EnergySensorConfig:
     """Sensor Configuration.
     defines basic HA properties of the energy sensor and
     stores callbacks that can parse sensor values out of
-    the json data received by WU API.
+    the json data received by SEV API.
     """
 
     def __init__(self, friendly_name, feature, value,
@@ -86,9 +75,7 @@ class EnergySensorConfig:
         self.icon = icon
         self.device_state_attributes = device_state_attributes or {}
         self.device_class = device_class
-        
-
-
+ 
 class EnergyCurrentConditionsSensorConfig(EnergySensorConfig):
     """Helper for defining sensor configurations for current conditions."""
 
@@ -115,12 +102,7 @@ class EnergyCurrentConditionsSensorConfig(EnergySensorConfig):
             device_class=device_class
         )
 
-
-
-#
-
 SENSOR_TYPES = {
-    # current
     'oil_p': {
         'name': 'energy production by Oil (percentage)',
         'unit_of_measurement': '%',
@@ -221,8 +203,6 @@ SENSOR_TYPES = {
     }
 }
 
-
-
 AREAS = {
     'suduroy': { 'name': 'Suðuroy', 'source': 'sev', 'station_id': 'suduroy' },
     'main': { 'name': 'Main area', 'source': 'sev', 'station_id': 'main' },
@@ -235,13 +215,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
                                async_add_entities, discovery_info=None):
-    
-    if hass.config.units is METRIC_SYSTEM:
-        unit_system_api = 'm'
-        unit_system = 'metric'
-    else:
-        unit_system_api = 'e'
-        unit_system = 'imperial'
 
     areas = config.get(CONF_AREAS)
     _LOGGER.info("areas in config: %s", areas )
@@ -251,8 +224,6 @@ async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
         _LOGGER.info("Start monitor area: %s", area['name'] )
         rest = SEVData(hass)
         await rest.async_update()
-        
-           
             
         sensors.append(EnergySensor(hass, rest, 'oil_e', area_id, area['name'], 'oil', 'e'))
         sensors.append(EnergySensor(hass, rest, 'oil_p', area_id, area['name'], 'oil', 'p'))
@@ -276,8 +247,6 @@ async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
         sensors.append(EnergySensor(hass, rest, 'fossilFree_p', area_id, area['name'], 'fossilFree', 'p'))
 
     async_add_entities(sensors, True)
-
-
 
 class EnergySensor(SensorEntity):
     """Implementing the sev sensor."""
@@ -316,7 +285,6 @@ class EnergySensor(SensorEntity):
             unit_of_measurement=sensor_info['unit_of_measurement'],
             device_class= sensor_info['device_class']
         )
-        #SENSOR_TYPES[self._condition]
         val = getattr(cfg, what)
         if not callable(val):
             return val
