@@ -1,15 +1,15 @@
 {
   "domain": "fo_energy_production",
   "name": "Faroese energy production",
-  "documentation": "https://github.com/wentzlau/ha-faroese-energy-production",
-  "issues": "https://github.com/wentzlau/ha-faroese-energy-production/issues",
-  "dependencies": [],
   "codeowners": [
     "@wentzlau"
   ],
-  "requirements": [],
-  "iot_class": "local_polling",
-  "version": "1.0.6",
   "config_flow": true,
-  "integration_type": "service"
+  "dependencies": [],
+  "documentation": "https://github.com/wentzlau/ha-faroese-energy-production",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/wentzlau/ha-faroese-energy-production/issues",
+  "requirements": [],
+  "version": "1.0.7"
 }
