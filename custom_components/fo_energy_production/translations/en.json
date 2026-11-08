@@ -1,0 +1,50 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Faroese energy production",
+        "description": "Choose the SEV grid areas to create energy production sensors for.",
+        "data": {
+          "areas": "Areas"
+        }
+      }
+    },
+    "error": {
+      "no_areas": "Select at least one area.",
+      "invalid_area": "Unknown area selected."
+    },
+    "abort": {
+      "already_configured": "Faroese energy production is already configured. Use Configure on the existing entry to change areas."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Faroese energy production",
+        "description": "Choose the SEV grid areas to create energy production sensors for.",
+        "data": {
+          "areas": "Areas"
+        }
+      }
+    },
+    "error": {
+      "no_areas": "Select at least one area.",
+      "invalid_area": "Unknown area selected."
+    }
+  },
+  "selector": {
+    "areas": {
+      "options": {
+        "suduroy": "Suðuroy",
+        "main": "Main area",
+        "total": "All production"
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml": {
+      "title": "Faroese energy production YAML configuration is deprecated",
+      "description": "Your `fo_energy_production` sensor configuration has been imported into the UI. Remove the `fo_energy_production` platform entry from `configuration.yaml` and restart Home Assistant."
+    }
+  }
+}

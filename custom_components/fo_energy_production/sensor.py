@@ -7,29 +7,27 @@ import logging
 import re
 
 import aiohttp
-import async_timeout
-
-from homeassistant.components.sensor import (
-    SensorEntity,
-) 
 
 from homeassistant.components import sensor
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    
-    ATTR_ATTRIBUTION)
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
-#from homeassistant.util.unit_system import METRIC_SYSTEM
 
 import voluptuous as vol
 import json
 
+from .const import AREAS, CONF_AREAS, DEFAULT_AREAS, DOMAIN
+
 _LOGGER = logging.getLogger("foenergy")
 
 SEV_URL = "https://www.sev.fo/api/realtimemap/now"
-CONF_AREAS= "areas"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 CONF_ATTRIBUTION = "Data provided by the sev (sev.fo)"
@@ -203,55 +201,71 @@ SENSOR_TYPES = {
     }
 }
 
-AREAS = {
-    'suduroy': { 'name': 'Suðuroy', 'source': 'sev', 'station_id': 'suduroy' },
-    'main': { 'name': 'Main area', 'source': 'sev', 'station_id': 'main' },
-    'total': { 'name': 'All production ', 'source': 'sev', 'station_id': 'total' },
-}
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_AREAS): vol.All(cv.ensure_list, vol.Length(min=1), [vol.In(AREAS)])
 })
 
-async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
-                               async_add_entities, discovery_info=None):
+SENSOR_FIELDS = ["oil", "wind", "solar", "hydro", "biogas", "tidal", "fossilFree"]
 
-    areas = config.get(CONF_AREAS)
-    _LOGGER.info("areas in config: %s", areas )
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Import a legacy configuration.yaml setup into a config entry."""
+    _LOGGER.warning(
+        "Configuring fo_energy_production in configuration.yaml is deprecated; "
+        "it has been imported into the UI. Please remove it from configuration.yaml"
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={CONF_AREAS: config.get(CONF_AREAS)},
+        )
+    )
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up sensors from a config entry."""
+    areas = entry.options.get(CONF_AREAS, entry.data.get(CONF_AREAS, DEFAULT_AREAS))
+    _LOGGER.info("areas in config: %s", areas)
+
+    rest = SEVData(hass)
+    await rest.async_update()
+
     sensors = []
     for area_id in areas:
+        if area_id not in AREAS:
+            continue
         area = AREAS[area_id]
-        _LOGGER.info("Start monitor area: %s", area['name'] )
-        rest = SEVData(hass)
-        await rest.async_update()
-            
-        sensors.append(EnergySensor(hass, rest, 'oil_e', area_id, area['name'], 'oil', 'e'))
-        sensors.append(EnergySensor(hass, rest, 'oil_p', area_id, area['name'], 'oil', 'p'))
-        
-        sensors.append(EnergySensor(hass, rest, 'wind_e', area_id, area['name'], 'wind', 'e'))
-        sensors.append(EnergySensor(hass, rest, 'wind_p', area_id, area['name'], 'wind', 'p'))
-
-        sensors.append(EnergySensor(hass, rest, 'solar_e', area_id, area['name'], 'solar', 'e'))
-        sensors.append(EnergySensor(hass, rest, 'solar_p', area_id, area['name'], 'solar', 'p'))
-        
-        sensors.append(EnergySensor(hass, rest, 'hydro_e', area_id, area['name'], 'hydro', 'e'))
-        sensors.append(EnergySensor(hass, rest, 'hydro_p', area_id, area['name'], 'hydro', 'p'))
-
-        sensors.append(EnergySensor(hass, rest, 'biogas_e', area_id, area['name'], 'biogas', 'e'))
-        sensors.append(EnergySensor(hass, rest, 'biogas_p', area_id, area['name'], 'biogas', 'p'))
-
-        sensors.append(EnergySensor(hass, rest, 'tidal_e', area_id, area['name'], 'tidal', 'e'))
-        sensors.append(EnergySensor(hass, rest, 'tidal_p', area_id, area['name'], 'tidal', 'p'))
-
-        sensors.append(EnergySensor(hass, rest, 'fossilFree_e', area_id, area['name'], 'fossilFree', 'e'))
-        sensors.append(EnergySensor(hass, rest, 'fossilFree_p', area_id, area['name'], 'fossilFree', 'p'))
+        _LOGGER.info("Start monitor area: %s", area['name'])
+        for field in SENSOR_FIELDS:
+            for data_type in ("e", "p"):
+                sensors.append(EnergySensor(
+                    hass, rest, f"{field}_{data_type}", area_id, area['name'], field, data_type))
 
     async_add_entities(sensors, True)
+
 
 class EnergySensor(SensorEntity):
     """Implementing the sev sensor."""
 
-    def __init__(self, hass: HomeAssistantType, rest, sensor_type, area_id, area_name, data_field, data_type):
+    def __init__(self, hass: HomeAssistant, rest, sensor_type, area_id, area_name, data_field, data_type):
         """Initialize the sensor."""
         self.data_field = data_field
         self.data_type = data_type
@@ -259,6 +273,7 @@ class EnergySensor(SensorEntity):
         self.area_name = area_name
         self.rest = rest
         self._sensor_type = sensor_type
+        self._state = None
         self._state_class = "measurement"
         self._attributes = {
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
@@ -394,7 +409,7 @@ class SEVData:
         current_date = datetime.today()
         sev_data = None
         try:
-            with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 sev_data = await self._session.get(SEV_URL)
                 if sev_data is None:
                     raise ValueError('NO CURRENT RESULT')

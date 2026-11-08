@@ -13,9 +13,15 @@ Add this repository to HACKS via HACKS/user defined repositories
 2) Copy the contents of the repository/custom_components folder into the newly created subfolder.
 
 ## Configuration
-In configuration.yaml enter this:
-under area enter one or more areas to integrate into home assistant.
-A set of sensors are created for each area.
+Go to **Settings → Devices & services → Add integration**, search for
+**Faroese energy production** and select one or more areas.
+A set of sensors is created for each selected area.
+
+To change the areas later, click **Configure** on the integration entry.
+
+### Legacy YAML configuration (deprecated)
+An existing `configuration.yaml` setup like the one below is imported into the UI
+automatically on startup. After that, remove it from `configuration.yaml`.
 ```
 sensor:    
   - platform: fo_energy_production    
