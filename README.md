@@ -5,12 +5,25 @@ Creates a set of sensors that may be used in dashboards or used in automations.
 ![Home assistant dashboard](https://github.com/wentzlau/ha-faroese-energy-production/blob/d1f3f4e466f208bb9738a671f310cae541bc6c39/images/ha-dashboard.png)
 
 ## Installation
-### Via HACKS
-Add this repository to HACKS via HACKS/user defined repositories
+### Via the Home Assistant Marketplace (recommended)
+Requires Home Assistant 2026.11 or newer.
+
+1. Go to **Settings → Marketplace**.
+2. Search for **Faroese energy production** and install it.
+   If it is not listed yet, add `https://github.com/wentzlau/ha-faroese-energy-production`
+   as a custom repository (type **Integration**) and install it from there.
+3. Restart Home Assistant.
+
+### Via HACS (Home Assistant before 2026.11)
+Add `https://github.com/wentzlau/ha-faroese-energy-production` as a custom repository
+(type **Integration**) in HACS, install it and restart Home Assistant.
+
 ### Manual installation
-## installation
-1) Create a subfolder called ha-faroese-energy-production in the .homeassistant/custom_components. 
-2) Copy the contents of the repository/custom_components folder into the newly created subfolder.
+1. Download `ha-faroese-energy-production.zip` from the
+   [latest release](https://github.com/wentzlau/ha-faroese-energy-production/releases/latest).
+2. Extract it into `<config>/custom_components/fo_energy_production/`.
+   The folder name must be exactly `fo_energy_production`.
+3. Restart Home Assistant.
 
 ## Configuration
 Go to **Settings → Devices & services → Add integration**, search for

@@ -104,7 +104,7 @@ info "Checking required manifest keys"
 python3 -I - "$MANIFEST" <<'PY'
 import json, sys
 data = json.load(open(sys.argv[1]))
-missing = [k for k in ("domain", "name", "version", "documentation", "codeowners", "requirements") if k not in data]
+missing = [k for k in ("domain", "name", "version", "documentation", "issue_tracker", "codeowners", "iot_class", "requirements") if k not in data]
 if missing:
     sys.exit(f"manifest.json is missing keys: {', '.join(missing)}")
 PY
